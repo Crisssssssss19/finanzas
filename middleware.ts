@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { verifyToken } from "@/lib/auth"
-import { isMongoDBConfigured } from "@/lib/mongodb"
 
-// 👇 Forzamos ejecución en Node.js para evitar Edge runtime en Netlify
+// ✅ Configuración optimizada para Vercel y Netlify
 export const config = {
   matcher: ["/", "/dashboard/:path*"],
-  runtime: "nodejs",
 }
 
 export async function middleware(request: NextRequest) {
@@ -14,18 +12,15 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = pathname === "/"
   const isProtectedRoute = pathname.startsWith("/dashboard")
 
-  // ✅ Evita errores si MongoDB no está configurado
-  if (!isMongoDBConfigured() && isProtectedRoute) {
-    return NextResponse.redirect(new URL("/", request.url))
-  }
-
   const token = request.cookies.get("token")?.value
 
+  // Si es una ruta protegida y no hay token, redirigir al login
   if (isProtectedRoute) {
     if (!token) {
       return NextResponse.redirect(new URL("/", request.url))
     }
 
+    // Verificar el token
     const payload = await verifyToken(token)
     if (!payload) {
       const response = NextResponse.redirect(new URL("/", request.url))
@@ -34,6 +29,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Si está en la página de auth y tiene token válido, redirigir al dashboard
   if (isAuthPage && token) {
     const payload = await verifyToken(token)
     if (payload) {

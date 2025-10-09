@@ -1,19 +1,12 @@
 [build]
-command = "npm run build"
-publish = ".next"
+  command = "npm run build"
+  publish = ".next"
 
 [[plugins]]
-package = "@netlify/plugin-nextjs"
+  package = "@netlify/plugin-nextjs"
 
 [functions]
-node_bundler = "esbuild"
+  node_bundler = "esbuild"
 
-# Fuerza a todas las funciones (incluido middleware) a usar Node.js
-[functions."*"]
-node_bundler = "esbuild"
-included_files = [
-  "next.config.ts",
-  "middleware.ts",
-  "lib/**",
-  "app/**"
-]
+[build.environment]
+  NODE_VERSION = "18"

@@ -1,12 +1,18 @@
 import { MongoClient, type Db } from "mongodb"
 
 const uri = process.env.MONGODB_URI || ""
-const options = {}
+const options = {
+  maxPoolSize: 10,
+  minPoolSize: 5,
+  maxIdleTimeMS: 30000,
+  serverSelectionTimeoutMS: 5000,
+}
 
 let client: MongoClient | null = null
 let clientPromise: Promise<MongoClient> | null = null
 
 declare global {
+  // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined
 }
 
@@ -25,7 +31,7 @@ if (uri) {
 
 export async function getDatabase(): Promise<Db | null> {
   if (!clientPromise) {
-    console.warn("[v0] MongoDB no está configurado. Por favor agrega MONGODB_URI a las variables de entorno.")
+    console.warn("MongoDB no está configurado. Agrega MONGODB_URI a las variables de entorno.")
     return null
   }
 
@@ -33,13 +39,13 @@ export async function getDatabase(): Promise<Db | null> {
     const client = await clientPromise
     return client.db("finanzas_app")
   } catch (error) {
-    console.error("[v0] Error conectando a MongoDB:", error)
+    console.error("Error conectando a MongoDB:", error)
     return null
   }
 }
 
 export function isMongoDBConfigured(): boolean {
-  return !!uri && !!clientPromise
+  return !!uri && uri.length > 0
 }
 
 export default clientPromise
