@@ -8,9 +8,12 @@ package = "@netlify/plugin-nextjs"
 [functions]
 node_bundler = "esbuild"
 
-# ✅ fuerza a usar funciones Node, no Edge
+# Fuerza a todas las funciones (incluido middleware) a usar Node.js
 [functions."*"]
 node_bundler = "esbuild"
-included_files = ["next.config.js", "next.config.ts"]
-
-
+included_files = [
+  "next.config.ts",
+  "middleware.ts",
+  "lib/**",
+  "app/**"
+]

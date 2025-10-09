@@ -3,13 +3,18 @@ import type { NextRequest } from "next/server"
 import { verifyToken } from "@/lib/auth"
 import { isMongoDBConfigured } from "@/lib/mongodb"
 
-export const runtime = "nodejs"
+// 👇 Forzamos ejecución en Node.js para evitar Edge runtime en Netlify
+export const config = {
+  matcher: ["/", "/dashboard/:path*"],
+  runtime: "nodejs",
+}
 
 export async function middleware(request: NextRequest) {
-  const isAuthPage = request.nextUrl.pathname === "/"
-  const isProtectedRoute = request.nextUrl.pathname.startsWith("/dashboard")
+  const { pathname } = request.nextUrl
+  const isAuthPage = pathname === "/"
+  const isProtectedRoute = pathname.startsWith("/dashboard")
 
-  // Si no está configurado MongoDB y es una ruta protegida, redirigir a home
+  // ✅ Evita errores si MongoDB no está configurado
   if (!isMongoDBConfigured() && isProtectedRoute) {
     return NextResponse.redirect(new URL("/", request.url))
   }
@@ -37,8 +42,4 @@ export async function middleware(request: NextRequest) {
   }
 
   return NextResponse.next()
-}
-
-export const config = {
-  matcher: ["/", "/dashboard/:path*"],
 }
