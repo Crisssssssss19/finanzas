@@ -4,7 +4,6 @@ import { IncomeExpenseChart } from "@/components/income-expense-chart"
 import { TransactionForm } from "@/components/transaction-form"
 import { TransactionsList } from "@/components/transactions-list"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { SavingsAdvice } from "@/components/savings-advice"
 
 export default function DashboardPage() {
   return (
