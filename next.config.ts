@@ -3,14 +3,18 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-
-  // Genera build independiente (ideal para Netlify/Vercel)
   output: "standalone",
 
-  // Si usas rutas API, evita Edge runtime
+  // Evita que middleware use Edge runtime automáticamente
   experimental: {
-    serverComponentsExternalPackages: ["mongoose", "jsonwebtoken", "bcrypt"],
+    serverComponentsExternalPackages: [
+      "mongoose",
+      "jsonwebtoken",
+      "bcrypt",
+      "nodemailer",
+    ],
   },
+
 };
 
 export default nextConfig;
