@@ -21,7 +21,7 @@ export default function DashboardPage() {
 
         <FinancialSummary />
 
-        <SavingsAdvice />
+        
 
         <div className="grid gap-6 md:grid-cols-2">
           <ExpenseChart />
