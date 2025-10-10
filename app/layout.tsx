@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "FinanzasApp",
+  title: "C&A Grow",
   description: "Gestiona tus finanzas personales",
 }
 
