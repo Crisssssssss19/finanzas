@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ThemeSelector } from "@/components/theme-selector" // ✅ NUEVO
 
 export function DashboardHeader() {
   const router = useRouter()
@@ -25,13 +26,18 @@ export function DashboardHeader() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold">C&A Grow</h1>
+            <h1 className="text-2xl font-bold">FinanzasApp</h1>
             <p className="text-sm text-muted-foreground">Gestiona tus finanzas personales</p>
           </div>
-          <Button variant="outline" onClick={handleLogout} className="gap-2 bg-transparent">
-            <LogOut className="h-4 w-4" />
-            Cerrar Sesión
-          </Button>
+          
+          {/* ✅ NUEVO: Selector de temas + Logout */}
+          <div className="flex items-center gap-2">
+            <ThemeSelector />
+            <Button variant="outline" onClick={handleLogout} className="gap-2 bg-transparent">
+              <LogOut className="h-4 w-4" />
+              Cerrar Sesión
+            </Button>
+          </div>
         </div>
 
         <nav className="flex gap-4">
