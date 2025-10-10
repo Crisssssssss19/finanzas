@@ -26,7 +26,7 @@ export function DashboardHeader() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold">FinanzasApp</h1>
+            <h1 className="text-2xl font-bold">C&A Grow</h1>
             <p className="text-sm text-muted-foreground">Gestiona tus finanzas personales</p>
           </div>
           
