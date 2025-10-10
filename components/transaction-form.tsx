@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { mutate } from "swr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -33,11 +33,7 @@ const EXPENSE_CATEGORIES = [
   "Otros Gastos",
 ]
 
-interface TransactionFormProps {
-  onSuccess?: () => void
-}
-
-export function TransactionForm({ onSuccess }: TransactionFormProps) {
+export function TransactionForm() {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [type, setType] = useState<"income" | "expense">("expense")
@@ -66,9 +62,12 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
         throw new Error("Error al crear transacción")
       }
 
+      // ✅ ACTUALIZAR CACHE DE SWR
+      mutate("/api/transactions")
+      mutate("/api/transactions/summary")
+      
       setOpen(false)
       e.currentTarget.reset()
-      onSuccess?.()
     } catch (error) {
       console.error("Error:", error)
     } finally {

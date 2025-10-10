@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { mutate } from "swr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,11 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { Loader2, Target } from "lucide-react"
 
-interface GoalFormProps {
-  onSuccess?: () => void
-}
-
-export function GoalForm({ onSuccess }: GoalFormProps) {
+export function GoalForm() {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -49,9 +45,11 @@ export function GoalForm({ onSuccess }: GoalFormProps) {
         throw new Error("Error al crear meta")
       }
 
+      // ✅ ACTUALIZAR CACHE DE SWR
+      mutate("/api/goals")
+      
       setOpen(false)
       e.currentTarget.reset()
-      onSuccess?.()
     } catch (error) {
       console.error("Error:", error)
     } finally {

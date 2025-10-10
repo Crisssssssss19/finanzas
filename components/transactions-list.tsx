@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import useSWR from "swr"
+import useSWR, { mutate } from "swr"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
@@ -31,7 +31,7 @@ interface Transaction {
 }
 
 export function TransactionsList() {
-  const { data, error, mutate } = useSWR<{ transactions: Transaction[] }>("/api/transactions", fetcher)
+  const { data, error } = useSWR<{ transactions: Transaction[] }>("/api/transactions", fetcher)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const handleDelete = async () => {
@@ -43,7 +43,9 @@ export function TransactionsList() {
       })
 
       if (response.ok) {
-        mutate()
+        // ✅ ACTUALIZAR CACHE DE SWR
+        mutate("/api/transactions")
+        mutate("/api/transactions/summary")
         setDeleteId(null)
       }
     } catch (error) {
@@ -98,7 +100,6 @@ export function TransactionsList() {
                   key={transaction.id}
                   className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  {/* Izquierda */}
                   <div className="flex items-center gap-4 flex-1">
                     <div
                       className={`p-2 rounded-full flex items-center justify-center ${
@@ -129,7 +130,6 @@ export function TransactionsList() {
                     </div>
                   </div>
 
-                  {/* Derecha */}
                   <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                     <p
                       className={`text-base sm:text-lg font-bold ${
@@ -156,7 +156,6 @@ export function TransactionsList() {
         </CardContent>
       </Card>
 
-      {/* Diálogo de eliminación */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent className="max-w-[90%] sm:max-w-md mx-auto">
           <AlertDialogHeader>

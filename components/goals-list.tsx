@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import useSWR from "swr"
+import useSWR, { mutate } from "swr"
 import { format, differenceInDays } from "date-fns"
 import { es } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
@@ -43,7 +43,7 @@ interface Goal {
 }
 
 export function GoalsList() {
-  const { data, error, mutate } = useSWR<{ goals: Goal[] }>("/api/goals", fetcher)
+  const { data, error } = useSWR<{ goals: Goal[] }>("/api/goals", fetcher)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [addProgressGoal, setAddProgressGoal] = useState<Goal | null>(null)
   const [progressAmount, setProgressAmount] = useState("")
@@ -58,7 +58,8 @@ export function GoalsList() {
       })
 
       if (response.ok) {
-        mutate()
+        // ✅ ACTUALIZAR CACHE DE SWR
+        mutate("/api/goals")
         setDeleteId(null)
       }
     } catch (error) {
@@ -78,7 +79,8 @@ export function GoalsList() {
       })
 
       if (response.ok) {
-        mutate()
+        // ✅ ACTUALIZAR CACHE DE SWR
+        mutate("/api/goals")
         setAddProgressGoal(null)
         setProgressAmount("")
       }
