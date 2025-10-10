@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getDatabase } from "@/lib/mongodb"
 import { getSession } from "@/lib/auth"
 import { ObjectId } from "mongodb"
+import { parseLocalDate } from "@/lib/date-utils"
 
 export async function GET(request: NextRequest) {
   try {
@@ -84,13 +85,16 @@ export async function POST(request: NextRequest) {
 
     const transactionsCollection = db.collection("transactions")
 
+    // ✅ Usar utilidad para parsear fecha
+    const transactionDate = date ? parseLocalDate(date) : new Date()
+
     const result = await transactionsCollection.insertOne({
       userId: new ObjectId(session.userId),
       type,
       amount: Number.parseFloat(amount),
       category,
       description,
-      date: date ? new Date(date) : new Date(),
+      date: transactionDate,
       createdAt: new Date(),
     })
 
@@ -103,7 +107,7 @@ export async function POST(request: NextRequest) {
           amount: Number.parseFloat(amount),
           category,
           description,
-          date: date ? new Date(date) : new Date(),
+          date: transactionDate,
         },
       },
       { status: 201 },

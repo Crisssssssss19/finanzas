@@ -1,13 +1,19 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { mutate } from "swr"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type React from "react";
+import { useState } from "react";
+import { mutate } from "swr";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -16,10 +22,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Loader2, Plus } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Loader2, Plus } from "lucide-react";
+import { getTodayLocal } from "@/lib/date-utils"
 
-const INCOME_CATEGORIES = ["Salario", "Freelance", "Inversiones", "Negocio", "Regalos", "Otros Ingresos"]
+
+const INCOME_CATEGORIES = [
+  "Salario",
+  "Freelance",
+  "Inversiones",
+  "Negocio",
+  "Regalos",
+  "Otros Ingresos",
+];
 
 const EXPENSE_CATEGORIES = [
   "Alimentación",
@@ -31,51 +46,51 @@ const EXPENSE_CATEGORIES = [
   "Educación",
   "Ropa",
   "Otros Gastos",
-]
+];
 
 export function TransactionForm() {
-  const [open, setOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [type, setType] = useState<"income" | "expense">("expense")
+  const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [type, setType] = useState<"income" | "expense">("expense");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
-    const formData = new FormData(e.currentTarget)
+    const formData = new FormData(e.currentTarget);
     const data = {
       type,
       amount: formData.get("amount"),
       category: formData.get("category"),
       description: formData.get("description"),
       date: formData.get("date"),
-    }
+    };
 
     try {
       const response = await fetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Error al crear transacción")
+        throw new Error("Error al crear transacción");
       }
 
       // ✅ ACTUALIZAR CACHE DE SWR
-      mutate("/api/transactions")
-      mutate("/api/transactions/summary")
-      
-      setOpen(false)
-      e.currentTarget.reset()
-    } catch (error) {
-      console.error("Error:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+      mutate("/api/transactions");
+      mutate("/api/transactions/summary");
 
-  const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
+      setOpen(false);
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -88,12 +103,17 @@ export function TransactionForm() {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Nueva Transacción</DialogTitle>
-          <DialogDescription>Registra un nuevo ingreso o gasto en tu cuenta</DialogDescription>
+          <DialogDescription>
+            Registra un nuevo ingreso o gasto en tu cuenta
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="type">Tipo</Label>
-            <Select value={type} onValueChange={(value) => setType(value as "income" | "expense")}>
+            <Select
+              value={type}
+              onValueChange={(value) => setType(value as "income" | "expense")}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -150,7 +170,8 @@ export function TransactionForm() {
               id="date"
               name="date"
               type="date"
-              defaultValue={new Date().toISOString().split("T")[0]}
+              defaultValue={getTodayLocal()}
+              max={getTodayLocal()}
               required
               disabled={isLoading}
             />
@@ -165,5 +186,5 @@ export function TransactionForm() {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

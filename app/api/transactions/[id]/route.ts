@@ -57,6 +57,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const transactionsCollection = db.collection("transactions")
 
+    // ✅ FIX: Crear fecha correcta sin conversión UTC
+    let transactionDate: Date
+    if (date) {
+      const [year, month, day] = date.split('-').map(Number)
+      transactionDate = new Date(year, month - 1, day, 12, 0, 0)
+    } else {
+      transactionDate = new Date()
+    }
+
     const result = await transactionsCollection.updateOne(
       {
         _id: new ObjectId(id),
@@ -68,7 +77,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           amount: Number.parseFloat(amount),
           category,
           description,
-          date: date ? new Date(date) : new Date(),
+          date: transactionDate,
           updatedAt: new Date(),
         },
       },

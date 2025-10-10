@@ -66,12 +66,16 @@ export async function POST(request: NextRequest) {
 
     const goalsCollection = db.collection("goals")
 
+    // ✅ FIX: Crear fecha correcta sin conversión UTC
+    const [year, month, day] = deadline.split('-').map(Number)
+    const deadlineDate = new Date(year, month - 1, day, 23, 59, 59) // Fin del día
+
     const result = await goalsCollection.insertOne({
       userId: new ObjectId(session.userId),
       name,
       targetAmount: Number.parseFloat(targetAmount),
       currentAmount: 0,
-      deadline: new Date(deadline),
+      deadline: deadlineDate,
       description: description || "",
       completed: false,
       createdAt: new Date(),
@@ -85,7 +89,7 @@ export async function POST(request: NextRequest) {
           name,
           targetAmount: Number.parseFloat(targetAmount),
           currentAmount: 0,
-          deadline: new Date(deadline),
+          deadline: deadlineDate,
           description: description || "",
           completed: false,
         },
