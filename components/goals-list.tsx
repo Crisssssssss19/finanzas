@@ -42,8 +42,17 @@ interface Goal {
   completed: boolean
 }
 
+interface BalanceData {
+  availableBalance: number
+  totalBalance: number
+  moneyInGoals: number
+}
+
 export function GoalsList() {
   const { data, error } = useSWR<{ goals: Goal[] }>("/api/goals", fetcher)
+  // ✅ NUEVO: Obtener balance disponible
+  const { data: balanceData } = useSWR<BalanceData>("/api/balance", fetcher)
+  
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [addProgressGoal, setAddProgressGoal] = useState<Goal | null>(null)
   const [progressAmount, setProgressAmount] = useState("")
@@ -58,8 +67,8 @@ export function GoalsList() {
       })
 
       if (response.ok) {
-        // ✅ ACTUALIZAR CACHE DE SWR
         mutate("/api/goals")
+        mutate("/api/balance") // ✅ Actualizar balance también
         setDeleteId(null)
       }
     } catch (error) {
@@ -67,6 +76,7 @@ export function GoalsList() {
     }
   }
 
+  // ✅ ACTUALIZADO: Manejar errores y mostrar balance
   const handleAddProgress = async () => {
     if (!addProgressGoal || !progressAmount) return
 
@@ -78,14 +88,23 @@ export function GoalsList() {
         body: JSON.stringify({ amount: progressAmount }),
       })
 
-      if (response.ok) {
-        // ✅ ACTUALIZAR CACHE DE SWR
-        mutate("/api/goals")
-        setAddProgressGoal(null)
-        setProgressAmount("")
+      const result = await response.json()
+
+      if (!response.ok) {
+        // Mostrar error específico
+        alert(result.message || result.error || "Error al actualizar meta")
+        setIsLoading(false)
+        return
       }
+
+      // Actualizar cache
+      mutate("/api/goals")
+      mutate("/api/balance") // ✅ Actualizar balance disponible
+      setAddProgressGoal(null)
+      setProgressAmount("")
     } catch (error) {
       console.error("Error actualizando progreso:", error)
+      alert("Error al actualizar progreso")
     } finally {
       setIsLoading(false)
     }
@@ -193,6 +212,7 @@ export function GoalsList() {
         )}
       </div>
 
+      {/* Diálogo de eliminar (sin cambios) */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -208,13 +228,41 @@ export function GoalsList() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* ✅ DIÁLOGO ACTUALIZADO: Muestra balance disponible */}
       <Dialog open={!!addProgressGoal} onOpenChange={() => setAddProgressGoal(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Agregar Ahorro</DialogTitle>
-            <DialogDescription>Registra cuánto has ahorrado para {addProgressGoal?.name}</DialogDescription>
+            <DialogDescription>
+              Registra cuánto has ahorrado para {addProgressGoal?.name}
+            </DialogDescription>
           </DialogHeader>
+          
           <div className="space-y-4 py-4">
+            {/* ✅ MOSTRAR BALANCE DISPONIBLE */}
+            {balanceData && (
+              <div className={`p-4 rounded-lg border-2 ${
+                balanceData.availableBalance > 0 
+                  ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700" 
+                  : "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700"
+              }`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">💰 Balance disponible:</span>
+                  <span className={`text-xl font-bold ${
+                    balanceData.availableBalance > 0 
+                      ? "text-green-600 dark:text-green-400" 
+                      : "text-red-600 dark:text-red-400"
+                  }`}>
+                    ${balanceData.availableBalance.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Este es el dinero que puedes agregar a tus metas
+                </p>
+              </div>
+            )}
+
+            {/* Input de monto */}
             <div className="space-y-2">
               <Label htmlFor="progress-amount">Monto a Agregar</Label>
               <Input
@@ -225,22 +273,50 @@ export function GoalsList() {
                 value={progressAmount}
                 onChange={(e) => setProgressAmount(e.target.value)}
                 disabled={isLoading}
+                max={balanceData?.availableBalance || undefined}
               />
+              
+              {/* ✅ ADVERTENCIA si intenta agregar más */}
+              {balanceData && progressAmount && Number(progressAmount) > balanceData.availableBalance && (
+                <div className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  <span className="text-red-600 dark:text-red-400 text-sm font-medium">
+                    ⚠️ No tienes suficiente dinero disponible
+                  </span>
+                </div>
+              )}
             </div>
+            
+            {/* Progreso actual de la meta */}
             {addProgressGoal && (
-              <div className="text-sm text-muted-foreground">
-                Progreso actual: ${addProgressGoal.currentAmount.toFixed(2)} / $
-                {addProgressGoal.targetAmount.toFixed(2)}
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Progreso actual:</strong> ${addProgressGoal.currentAmount.toFixed(2)} / ${addProgressGoal.targetAmount.toFixed(2)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Faltan: ${(addProgressGoal.targetAmount - addProgressGoal.currentAmount).toFixed(2)}
+                </p>
               </div>
             )}
           </div>
+          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddProgressGoal(null)} disabled={isLoading}>
+            <Button 
+              variant="outline" 
+              onClick={() => setAddProgressGoal(null)} 
+              disabled={isLoading}
+            >
               Cancelar
             </Button>
-            <Button onClick={handleAddProgress} disabled={isLoading || !progressAmount}>
-              {isLoading && <span className="mr-2">Guardando...</span>}
-              Guardar
+            <Button 
+              onClick={handleAddProgress} 
+              disabled={
+                isLoading || 
+                !progressAmount || 
+                Number(progressAmount) <= 0 ||
+                (balanceData && Number(progressAmount) > balanceData.availableBalance)
+              }
+            >
+              {isLoading ? "Guardando..." : "Guardar"}
             </Button>
           </DialogFooter>
         </DialogContent>

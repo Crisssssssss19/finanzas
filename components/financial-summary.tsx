@@ -20,7 +20,13 @@ export function FinancialSummary() {
   }
 
   if (!data) {
-    return <div className="text-center text-muted-foreground">Cargando...</div>
+     return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-center text-muted-foreground">Cargando...</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   const savingsRate = data.income > 0 ? ((data.balance / data.income) * 100).toFixed(1) : "0.0"

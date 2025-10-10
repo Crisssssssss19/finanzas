@@ -4,6 +4,7 @@ import { IncomeExpenseChart } from "@/components/income-expense-chart"
 import { TransactionForm } from "@/components/transaction-form"
 import { TransactionsList } from "@/components/transactions-list"
 import { DashboardHeader } from "@/components/dashboard-header"
+import { AvailableBalance } from "@/components/available-balance"
 
 export default function DashboardPage() {
   return (
@@ -17,10 +18,9 @@ export default function DashboardPage() {
           </div>
           <TransactionForm />
         </div>
-
+  
         <FinancialSummary />
-
-        
+        <AvailableBalance />
 
         <div className="grid gap-6 md:grid-cols-2">
           <ExpenseChart />
