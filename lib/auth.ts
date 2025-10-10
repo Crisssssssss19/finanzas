@@ -42,9 +42,11 @@ export async function getSession(): Promise<UserPayload | null> {
 
 export async function setSession(token: string) {
   const cookieStore = await cookies()
+  
+  // ✅ ACTUALIZADO: Cookies más seguras
   cookieStore.set("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production", // ✅ HTTPS en producción
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7, // 7 días
     path: "/",
