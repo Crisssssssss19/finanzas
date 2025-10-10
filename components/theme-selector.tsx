@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+type ThemeKey = keyof typeof themes
+
 export function ThemeSelector() {
   const { theme, mode, setTheme, toggleMode } = useTheme()
 
@@ -31,7 +33,7 @@ export function ThemeSelector() {
           {Object.entries(themes).map(([key, value]) => (
             <DropdownMenuItem
               key={key}
-              onClick={() => setTheme(key as any)}
+              onClick={() => setTheme(key as ThemeKey)}
               className={theme === key ? "bg-accent" : ""}
             >
               <div className="flex items-center gap-2">

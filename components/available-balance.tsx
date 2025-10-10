@@ -2,7 +2,7 @@
 
 import useSWR from "swr"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DollarSign, Flag, TrendingUp } from "lucide-react"
+import { DollarSign, Flag} from "lucide-react"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
