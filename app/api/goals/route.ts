@@ -3,6 +3,7 @@ import { getDatabase } from "@/lib/mongodb"
 import { getSession } from "@/lib/auth"
 import { ObjectId } from "mongodb"
 
+// ✅ Obtener todas las metas del usuario autenticado
 export async function GET() {
   try {
     const session = await getSession()
@@ -13,7 +14,9 @@ export async function GET() {
     const db = await getDatabase()
     if (!db) {
       return NextResponse.json(
-        { error: "Base de datos no configurada. Por favor agrega MONGODB_URI a las variables de entorno." },
+        {
+          error: "Base de datos no configurada. Por favor agrega MONGODB_URI a las variables de entorno.",
+        },
         { status: 503 },
       )
     }
@@ -43,6 +46,7 @@ export async function GET() {
   }
 }
 
+// ✅ Crear una nueva meta
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
@@ -52,6 +56,7 @@ export async function POST(request: NextRequest) {
 
     const { name, targetAmount, deadline, description } = await request.json()
 
+    // Validar campos requeridos
     if (!name || !targetAmount || !deadline) {
       return NextResponse.json({ error: "Todos los campos son requeridos" }, { status: 400 })
     }
@@ -59,17 +64,21 @@ export async function POST(request: NextRequest) {
     const db = await getDatabase()
     if (!db) {
       return NextResponse.json(
-        { error: "Base de datos no configurada. Por favor agrega MONGODB_URI a las variables de entorno." },
+        {
+          error: "Base de datos no configurada. Por favor agrega MONGODB_URI a las variables de entorno.",
+        },
         { status: 503 },
       )
     }
 
     const goalsCollection = db.collection("goals")
 
-    // ✅ FIX: Crear fecha correcta sin conversión UTC
-    const [year, month, day] = deadline.split('-').map(Number)
-    const deadlineDate = new Date(year, month - 1, day, 23, 59, 59) // Fin del día
+    // ✅ Corrección: Crear fecha límite ajustada al final del día (local)
+    // Esto evita que se guarde con desfase UTC (por ejemplo, 1 día antes)
+    const [year, month, day] = deadline.split("-").map(Number)
+    const deadlineDate = new Date(year, month - 1, day, 23, 59, 59)
 
+    // Crear la nueva meta
     const result = await goalsCollection.insertOne({
       userId: new ObjectId(session.userId),
       name,

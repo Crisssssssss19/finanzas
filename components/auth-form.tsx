@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2 } from "lucide-react"
+import { Loader2, Wallet } from "lucide-react"
 
 export function AuthForm() {
   const router = useRouter()
@@ -51,25 +51,36 @@ export function AuthForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">FinanzasApp</CardTitle>
-          <CardDescription className="text-center">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+      <Card className="w-full max-w-md shadow-2xl border-2">
+        <CardHeader className="space-y-3 text-center">
+          <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-2">
+            <Wallet className="h-8 w-8 text-primary-foreground" />
+          </div>
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            FinanzasApp
+          </CardTitle>
+          <CardDescription className="text-base">
             Gestiona tus finanzas personales de manera inteligente
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-              <TabsTrigger value="register">Registrarse</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="login" className="text-base">
+                Iniciar Sesión
+              </TabsTrigger>
+              <TabsTrigger value="register" className="text-base">
+                Registrarse
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={(e) => handleSubmit(e, "login")} className="space-y-4">
+              <form onSubmit={(e) => handleSubmit(e, "login")} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-email" className="text-base">
+                    Email
+                  </Label>
                   <Input
                     id="login-email"
                     name="email"
@@ -77,24 +88,36 @@ export function AuthForm() {
                     placeholder="tu@email.com"
                     required
                     disabled={isLoading}
+                    className="h-11"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Contraseña</Label>
-                  <Input id="login-password" name="password" type="password" required disabled={isLoading} />
+                  <Label htmlFor="login-password" className="text-base">
+                    Contraseña
+                  </Label>
+                  <Input
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    required
+                    disabled={isLoading}
+                    className="h-11"
+                  />
                 </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {error && <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>}
+                <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                   Iniciar Sesión
                 </Button>
               </form>
             </TabsContent>
 
             <TabsContent value="register">
-              <form onSubmit={(e) => handleSubmit(e, "register")} className="space-y-4">
+              <form onSubmit={(e) => handleSubmit(e, "register")} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="register-name">Nombre</Label>
+                  <Label htmlFor="register-name" className="text-base">
+                    Nombre
+                  </Label>
                   <Input
                     id="register-name"
                     name="name"
@@ -102,10 +125,13 @@ export function AuthForm() {
                     placeholder="Tu nombre"
                     required
                     disabled={isLoading}
+                    className="h-11"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="register-email">Email</Label>
+                  <Label htmlFor="register-email" className="text-base">
+                    Email
+                  </Label>
                   <Input
                     id="register-email"
                     name="email"
@@ -113,10 +139,13 @@ export function AuthForm() {
                     placeholder="tu@email.com"
                     required
                     disabled={isLoading}
+                    className="h-11"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="register-password">Contraseña</Label>
+                  <Label htmlFor="register-password" className="text-base">
+                    Contraseña
+                  </Label>
                   <Input
                     id="register-password"
                     name="password"
@@ -124,18 +153,19 @@ export function AuthForm() {
                     required
                     disabled={isLoading}
                     minLength={6}
+                    className="h-11"
                   />
                 </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {error && <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>}
+                <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                   Crear Cuenta
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
+        <CardFooter className="flex flex-col space-y-2 pb-6">
           <p className="text-xs text-center text-muted-foreground">
             Al continuar, aceptas nuestros términos y condiciones
           </p>

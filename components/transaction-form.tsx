@@ -24,8 +24,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Loader2, Plus } from "lucide-react";
-import { getTodayLocal } from "@/lib/date-utils"
-
+import { getTodayLocal } from "@/lib/date-utils";
 
 const INCOME_CATEGORIES = [
   "Salario",
@@ -48,7 +47,11 @@ const EXPENSE_CATEGORIES = [
   "Otros Gastos",
 ];
 
-export function TransactionForm() {
+interface TransactionFormProps {
+  onSuccess?: () => void;
+}
+
+export function TransactionForm({ onSuccess }: TransactionFormProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [type, setType] = useState<"income" | "expense">("expense");
@@ -73,16 +76,18 @@ export function TransactionForm() {
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        throw new Error("Error al crear transacción");
-      }
+      if (!response.ok) throw new Error("Error al crear transacción");
 
-      // ✅ ACTUALIZAR CACHE DE SWR
+      // ✅ Actualizar caché SWR
       mutate("/api/transactions");
       mutate("/api/transactions/summary");
 
+      // ✅ Cerrar modal y limpiar formulario
       setOpen(false);
       e.currentTarget.reset();
+
+      // ✅ Ejecutar callback externo (si existe)
+      onSuccess?.();
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -95,37 +100,46 @@ export function TransactionForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="gap-2">
-          <Plus className="h-5 w-5" />
-          Nueva Transacción
+        <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
+          <Plus className="h-5 w-5" /> Nueva Transacción
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Nueva Transacción</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-2xl font-semibold">
+            Nueva Transacción
+          </DialogTitle>
+          <DialogDescription className="text-base">
             Registra un nuevo ingreso o gasto en tu cuenta
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <form onSubmit={handleSubmit} className="space-y-5 pt-4">
+          {/* Tipo */}
           <div className="space-y-2">
-            <Label htmlFor="type">Tipo</Label>
+            <Label htmlFor="type" className="text-base">
+              Tipo
+            </Label>
             <Select
               value={type}
               onValueChange={(value) => setType(value as "income" | "expense")}
             >
-              <SelectTrigger>
-                <SelectValue />
+              <SelectTrigger className="h-11">
+                <SelectValue placeholder="Selecciona tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="income">Ingreso</SelectItem>
-                <SelectItem value="expense">Gasto</SelectItem>
+                <SelectItem value="income">💰 Ingreso</SelectItem>
+                <SelectItem value="expense">💸 Gasto</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
+          {/* Monto */}
           <div className="space-y-2">
-            <Label htmlFor="amount">Monto</Label>
+            <Label htmlFor="amount" className="text-base">
+              Monto
+            </Label>
             <Input
               id="amount"
               name="amount"
@@ -134,13 +148,17 @@ export function TransactionForm() {
               placeholder="0.00"
               required
               disabled={isLoading}
+              className="h-11 text-lg"
             />
           </div>
 
+          {/* Categoría */}
           <div className="space-y-2">
-            <Label htmlFor="category">Categoría</Label>
+            <Label htmlFor="category" className="text-base">
+              Categoría
+            </Label>
             <Select name="category" required disabled={isLoading}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11">
                 <SelectValue placeholder="Selecciona una categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -153,19 +171,26 @@ export function TransactionForm() {
             </Select>
           </div>
 
+          {/* Descripción */}
           <div className="space-y-2">
-            <Label htmlFor="description">Descripción</Label>
+            <Label htmlFor="description" className="text-base">
+              Descripción
+            </Label>
             <Textarea
               id="description"
               name="description"
               placeholder="Describe la transacción..."
               required
               disabled={isLoading}
+              className="min-h-[80px]"
             />
           </div>
 
+          {/* Fecha */}
           <div className="space-y-2">
-            <Label htmlFor="date">Fecha</Label>
+            <Label htmlFor="date" className="text-base">
+              Fecha
+            </Label>
             <Input
               id="date"
               name="date"
@@ -174,12 +199,18 @@ export function TransactionForm() {
               max={getTodayLocal()}
               required
               disabled={isLoading}
+              className="h-11"
             />
           </div>
 
-          <DialogFooter>
-            <Button type="submit" disabled={isLoading} className="w-full">
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {/* Botón Guardar */}
+          <DialogFooter className="pt-4">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-11 text-base font-semibold"
+            >
+              {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
               Guardar Transacción
             </Button>
           </DialogFooter>
