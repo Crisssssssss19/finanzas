@@ -21,7 +21,10 @@ export async function GET() {
 
     const usersCollection = db.collection("users")
 
-    const user = await usersCollection.findOne({ _id: new ObjectId(session.userId) }, { projection: { password: 0 } })
+    const user = await usersCollection.findOne(
+      { _id: new ObjectId(session.userId) }, 
+      { projection: { password: 0 } }
+    )
 
     if (!user) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 })
@@ -32,6 +35,7 @@ export async function GET() {
         id: user._id.toString(),
         email: user.email,
         name: user.name,
+        picture: user.picture || null,
       },
     })
   } catch (error) {

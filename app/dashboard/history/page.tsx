@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowUpCircle, ArrowDownCircle, Calendar, DollarSign } from "lucide-react"
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -60,6 +61,32 @@ export default function HistoryPage() {
 
   const transactions = data.transactions || []
 
+  // Calcular datos mensuales para la gráfica
+  const monthlyData = Array.from({ length: 12 }, (_, i) => {
+    const monthTransactions = transactions.filter((t) => {
+      const transactionDate = new Date(t.date)
+      return (
+        transactionDate.getMonth() === i &&
+        transactionDate.getFullYear() === Number.parseInt(selectedYear)
+      )
+    })
+
+    const income = monthTransactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + t.amount, 0)
+
+    const expenses = monthTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + t.amount, 0)
+
+    return {
+      month: format(new Date(2024, i, 1), "MMM", { locale: es }),
+      Ingresos: income,
+      Gastos: expenses,
+      Balance: income - expenses,
+    }
+  })
+
   // Filtrar transacciones por mes y año seleccionados
   const filteredTransactions = transactions.filter((t) => {
     const transactionDate = new Date(t.date)
@@ -70,9 +97,13 @@ export default function HistoryPage() {
   })
 
   // Calcular totales del mes
-  const monthlyIncome = filteredTransactions.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0)
+  const monthlyIncome = filteredTransactions
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0)
 
-  const monthlyExpenses = filteredTransactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0)
+  const monthlyExpenses = filteredTransactions
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0)
 
   const monthlyBalance = monthlyIncome - monthlyExpenses
 
@@ -101,23 +132,10 @@ export default function HistoryPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold">Historial de Transacciones</h2>
-            <p className="text-muted-foreground mt-1">Revisa todos tus ingresos y gastos por mes</p>
+            <p className="text-muted-foreground mt-1">Revisa todos tus ingresos y gastos</p>
           </div>
 
           <div className="flex gap-2 w-full sm:w-auto">
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-full sm:w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month, index) => (
-                  <SelectItem key={index} value={index.toString()}>
-                    {month}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
             <Select value={selectedYear} onValueChange={setSelectedYear}>
               <SelectTrigger className="w-full sm:w-[120px]">
                 <SelectValue />
@@ -133,6 +151,78 @@ export default function HistoryPage() {
           </div>
         </div>
 
+        {/* Gráfica de Tendencia Anual */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Tendencia Anual {selectedYear}</CardTitle>
+            <CardDescription>Ingresos, gastos y balance mensual</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip
+                  formatter={(value: number) => `$${value.toFixed(2)}`}
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="Ingresos" fill="#10b981" />
+                <Bar dataKey="Gastos" fill="#ef4444" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Línea de Balance Mensual */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Balance Mensual {selectedYear}</CardTitle>
+            <CardDescription>Evolución del balance durante el año</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip
+                  formatter={(value: number) => `$${value.toFixed(2)}`}
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="Balance" stroke="#8b5cf6" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Selector de Mes Específico */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-xl font-semibold">Detalle Mensual:</h3>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((month, index) => (
+                <SelectItem key={index} value={index.toString()}>
+                  {month}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Resumen mensual */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card className="border-l-4 border-l-green-500">
@@ -143,7 +233,9 @@ export default function HistoryPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">${monthlyIncome.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                ${monthlyIncome.toFixed(2)}
+              </div>
             </CardContent>
           </Card>
 
@@ -155,7 +247,9 @@ export default function HistoryPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">${monthlyExpenses.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                ${monthlyExpenses.toFixed(2)}
+              </div>
             </CardContent>
           </Card>
 
@@ -168,7 +262,11 @@ export default function HistoryPage() {
             </CardHeader>
             <CardContent>
               <div
-                className={`text-2xl font-bold ${monthlyBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                className={`text-2xl font-bold ${
+                  monthlyBalance >= 0
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
               >
                 ${monthlyBalance.toFixed(2)}
               </div>
@@ -183,7 +281,8 @@ export default function HistoryPage() {
               Transacciones de {months[Number.parseInt(selectedMonth)]} {selectedYear}
             </CardTitle>
             <CardDescription>
-              {filteredTransactions.length} transacción{filteredTransactions.length !== 1 ? "es" : ""} encontrada
+              {filteredTransactions.length} transacción{filteredTransactions.length !== 1 ? "es" : ""}{" "}
+              encontrada
               {filteredTransactions.length !== 1 ? "s" : ""}
             </CardDescription>
           </CardHeader>
@@ -204,7 +303,11 @@ export default function HistoryPage() {
                     >
                       <div className="flex items-center gap-4 flex-1">
                         <div
-                          className={`p-2 rounded-full ${transaction.type === "income" ? "bg-green-100 dark:bg-green-900/30" : "bg-red-100 dark:bg-red-900/30"}`}
+                          className={`p-2 rounded-full ${
+                            transaction.type === "income"
+                              ? "bg-green-100 dark:bg-green-900/30"
+                              : "bg-red-100 dark:bg-red-900/30"
+                          }`}
                         >
                           {transaction.type === "income" ? (
                             <ArrowUpCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -225,7 +328,11 @@ export default function HistoryPage() {
                         </div>
                       </div>
                       <div
-                        className={`text-lg font-bold ${transaction.type === "income" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                        className={`text-lg font-bold ${
+                          transaction.type === "income"
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
                       >
                         {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
                       </div>
