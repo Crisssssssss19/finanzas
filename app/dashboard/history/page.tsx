@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import useSWR from "swr"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowUpCircle, ArrowDownCircle, Calendar, DollarSign } from "lucide-react"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import { useTheme } from "@/components/theme-provider"
+import { themes } from "@/lib/themes"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -22,81 +24,82 @@ interface Transaction {
   date: string
 }
 
+interface UserData {
+  user: {
+    createdAt: string
+  }
+}
+
 export default function HistoryPage() {
   const currentDate = new Date()
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth().toString())
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear().toString())
 
+  const { theme: themeKey, mode } = useTheme()
+  const currentTheme = themes[themeKey][mode]
+
   const { data, error } = useSWR<{ transactions: Transaction[] }>("/api/transactions", fetcher)
+  const { data: userData } = useSWR<UserData>("/api/auth/me", fetcher)
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background">
-        <DashboardHeader />
-        <main className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-center text-destructive">Error al cargar transacciones</p>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    )
-  }
+  // ✅ Asegurar que hooks como useMemo siempre se ejecuten
+  const transactions = data?.transactions || []
 
-  if (!data) {
-    return (
-      <div className="min-h-screen bg-background">
-        <DashboardHeader />
-        <main className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-center text-muted-foreground">Cargando historial...</p>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    )
-  }
+  // Calcular año de inicio basado en datos
+  const accountCreationDate = userData?.user?.createdAt
+    ? new Date(userData.user.createdAt)
+    : (transactions.length > 0 ? new Date(transactions[0].date) : currentDate)
 
-  const transactions = data.transactions || []
+  const startYear = accountCreationDate.getFullYear()
+  const endYear = currentDate.getFullYear()
 
-  // Calcular datos mensuales para la gráfica
-  const monthlyData = Array.from({ length: 12 }, (_, i) => {
-    const monthTransactions = transactions.filter((t) => {
-      const transactionDate = new Date(t.date)
-      return (
-        transactionDate.getMonth() === i &&
-        transactionDate.getFullYear() === Number.parseInt(selectedYear)
-      )
+  const availableYears = Array.from(
+    { length: endYear - startYear + 1 },
+    (_, i) => startYear + i
+  ).reverse()
+
+  const incomeColor = mode === "dark" ? "#10b981" : "#059669"
+  const expenseColor = mode === "dark" ? "#ef4444" : "#dc2626"
+
+  const balanceColor = currentTheme.primary?.startsWith("#")
+    ? currentTheme.primary
+    : (mode === "dark" ? "#a855f7" : "#9333ea")
+
+  // ✅ Siempre ejecutar useMemo (no dentro de condicional)
+  const monthlyData = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const monthTransactions = transactions.filter((t) => {
+        const d = new Date(t.date)
+        return (
+          d.getMonth() === i &&
+          d.getFullYear() === Number(selectedYear)
+        )
+      })
+
+      const income = monthTransactions
+        .filter((t) => t.type === "income")
+        .reduce((sum, t) => sum + t.amount, 0)
+
+      const expenses = monthTransactions
+        .filter((t) => t.type === "expense")
+        .reduce((sum, t) => sum + t.amount, 0)
+
+      return {
+        month: format(new Date(2024, i, 1), "MMM", { locale: es }),
+        Ingresos: income,
+        Gastos: expenses,
+        Balance: income - expenses,
+      }
     })
+  }, [transactions, selectedYear])
 
-    const income = monthTransactions
-      .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + t.amount, 0)
-
-    const expenses = monthTransactions
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + t.amount, 0)
-
-    return {
-      month: format(new Date(2024, i, 1), "MMM", { locale: es }),
-      Ingresos: income,
-      Gastos: expenses,
-      Balance: income - expenses,
-    }
-  })
-
-  // Filtrar transacciones por mes y año seleccionados
   const filteredTransactions = transactions.filter((t) => {
-    const transactionDate = new Date(t.date)
+    const d = new Date(t.date)
     return (
-      transactionDate.getMonth() === Number.parseInt(selectedMonth) &&
-      transactionDate.getFullYear() === Number.parseInt(selectedYear)
+      d.getMonth() === Number(selectedMonth) &&
+      d.getFullYear() === Number(selectedYear)
     )
   })
 
-  // Calcular totales del mes
   const monthlyIncome = filteredTransactions
     .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + t.amount, 0)
@@ -107,23 +110,10 @@ export default function HistoryPage() {
 
   const monthlyBalance = monthlyIncome - monthlyExpenses
 
-  // Generar opciones de meses y años
   const months = [
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre",
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
   ]
-
-  const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i)
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,16 +122,18 @@ export default function HistoryPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold">Historial de Transacciones</h2>
-            <p className="text-muted-foreground mt-1">Revisa todos tus ingresos y gastos</p>
+            <p className="text-muted-foreground mt-1">
+              Datos desde {format(accountCreationDate, "MMMM yyyy", { locale: es })}
+            </p>
           </div>
 
           <div className="flex gap-2 w-full sm:w-auto">
             <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-full sm:w-[120px]">
+              <SelectTrigger className="w-full sm:w-[140px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {years.map((year) => (
+                {availableYears.map((year) => (
                   <SelectItem key={year} value={year.toString()}>
                     {year}
                   </SelectItem>
@@ -155,25 +147,41 @@ export default function HistoryPage() {
         <Card>
           <CardHeader>
             <CardTitle>Tendencia Anual {selectedYear}</CardTitle>
-            <CardDescription>Ingresos, gastos y balance mensual</CardDescription>
+            <CardDescription>Ingresos y gastos por mes</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <CartesianGrid strokeDasharray="3 3" stroke={mode === 'dark' ? '#333' : '#e5e5e5'} />
+                <XAxis 
+                  dataKey="month" 
+                  stroke={mode === 'dark' ? '#888' : '#666'}
+                  style={{ fontSize: '12px' }}
+                />
+                <YAxis 
+                  stroke={mode === 'dark' ? '#888' : '#666'}
+                  style={{ fontSize: '12px' }}
+                />
                 <Tooltip
                   formatter={(value: number) => `$${value.toFixed(2)}`}
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    backgroundColor: mode === 'dark' ? '#1f2937' : '#ffffff',
+                    border: `1px solid ${mode === 'dark' ? '#374151' : '#e5e7eb'}`,
                     borderRadius: "8px",
+                    color: mode === 'dark' ? '#f3f4f6' : '#111827',
+                  }}
+                  labelStyle={{ 
+                    color: mode === 'dark' ? '#f3f4f6' : '#111827',
+                    fontWeight: 'bold'
                   }}
                 />
-                <Legend />
-                <Bar dataKey="Ingresos" fill="#10b981" />
-                <Bar dataKey="Gastos" fill="#ef4444" />
+                <Legend 
+                  wrapperStyle={{
+                    color: mode === 'dark' ? '#f3f4f6' : '#111827'
+                  }}
+                />
+                <Bar dataKey="Ingresos" fill={incomeColor} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Gastos" fill={expenseColor} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -188,19 +196,42 @@ export default function HistoryPage() {
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <CartesianGrid strokeDasharray="3 3" stroke={mode === 'dark' ? '#333' : '#e5e5e5'} />
+                <XAxis 
+                  dataKey="month" 
+                  stroke={mode === 'dark' ? '#888' : '#666'}
+                  style={{ fontSize: '12px' }}
+                />
+                <YAxis 
+                  stroke={mode === 'dark' ? '#888' : '#666'}
+                  style={{ fontSize: '12px' }}
+                />
                 <Tooltip
                   formatter={(value: number) => `$${value.toFixed(2)}`}
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    backgroundColor: mode === 'dark' ? '#1f2937' : '#ffffff',
+                    border: `1px solid ${mode === 'dark' ? '#374151' : '#e5e7eb'}`,
                     borderRadius: "8px",
+                    color: mode === 'dark' ? '#f3f4f6' : '#111827',
+                  }}
+                  labelStyle={{ 
+                    color: mode === 'dark' ? '#f3f4f6' : '#111827',
+                    fontWeight: 'bold'
                   }}
                 />
-                <Legend />
-                <Line type="monotone" dataKey="Balance" stroke="#8b5cf6" strokeWidth={3} />
+                <Legend 
+                  wrapperStyle={{
+                    color: mode === 'dark' ? '#f3f4f6' : '#111827'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="Balance" 
+                  stroke={balanceColor}
+                  strokeWidth={3}
+                  dot={{ fill: balanceColor, r: 4 }}
+                  activeDot={{ r: 6, fill: balanceColor }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -282,8 +313,7 @@ export default function HistoryPage() {
             </CardTitle>
             <CardDescription>
               {filteredTransactions.length} transacción{filteredTransactions.length !== 1 ? "es" : ""}{" "}
-              encontrada
-              {filteredTransactions.length !== 1 ? "s" : ""}
+              encontrada{filteredTransactions.length !== 1 ? "s" : ""}
             </CardDescription>
           </CardHeader>
           <CardContent>

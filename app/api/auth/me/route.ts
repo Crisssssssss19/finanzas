@@ -36,6 +36,7 @@ export async function GET() {
         email: user.email,
         name: user.name,
         picture: user.picture || null,
+        createdAt: user.createdAt || new Date().toISOString(),
       },
     })
   } catch (error) {
