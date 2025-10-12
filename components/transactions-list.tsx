@@ -7,7 +7,7 @@ import { es } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Trash2, TrendingUp, TrendingDown } from "lucide-react"
+import { Trash2, ArrowUpCircle, ArrowDownCircle } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,9 +55,9 @@ export function TransactionsList() {
 
   if (error) {
     return (
-      <Card className="max-w-full mx-auto p-4 sm:p-6">
+      <Card>
         <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground text-sm sm:text-base">
+          <p className="text-center text-muted-foreground">
             Error al cargar transacciones
           </p>
         </CardContent>
@@ -67,9 +67,9 @@ export function TransactionsList() {
 
   if (!data) {
     return (
-      <Card className="max-w-full mx-auto p-4 sm:p-6">
+      <Card>
         <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground text-sm sm:text-base">
+          <p className="text-center text-muted-foreground">
             Cargando...
           </p>
         </CardContent>
@@ -81,74 +81,74 @@ export function TransactionsList() {
 
   return (
     <>
-      <Card className="max-w-4xl mx-auto w-full p-3 sm:p-6">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-center text-lg sm:text-xl font-bold">
-            Transacciones Recientes
-          </CardTitle>
+      <Card>
+        <CardHeader>
+          <CardTitle>Transacciones Recientes</CardTitle>
         </CardHeader>
 
-        <CardContent className="overflow-y-auto max-h-[70vh] sm:max-h-none">
+        <CardContent>
           {transactions.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8 text-sm sm:text-base">
+            <p className="text-center text-muted-foreground py-8">
               No hay transacciones registradas
             </p>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="space-y-3">
               {transactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors group"
                 >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div
-                      className={`p-2 rounded-full flex items-center justify-center ${
-                        transaction.type === "income"
-                          ? "bg-green-100 dark:bg-green-900/20"
-                          : "bg-red-100 dark:bg-red-900/20"
-                      }`}
-                    >
-                      {transaction.type === "income" ? (
-                        <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      ) : (
-                        <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
-                      )}
-                    </div>
+                  {/* Icono */}
+                  <div
+                    className={`p-2 rounded-full flex-shrink-0 ${
+                      transaction.type === "income"
+                        ? "bg-green-100 dark:bg-green-900/30"
+                        : "bg-red-100 dark:bg-red-900/30"
+                    }`}
+                  >
+                    {transaction.type === "income" ? (
+                      <ArrowUpCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    ) : (
+                      <ArrowDownCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                    )}
+                  </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <p className="font-medium truncate text-sm sm:text-base">
-                          {transaction.description}
-                        </p>
-                        <Badge variant="outline" className="text-xs sm:text-sm">
-                          {transaction.category}
-                        </Badge>
+                  {/* Contenido principal */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h3 className="font-medium text-sm sm:text-base truncate">
+                        {transaction.description}
+                      </h3>
+                      <div
+                        className={`text-base sm:text-lg font-bold whitespace-nowrap flex-shrink-0 ${
+                          transaction.type === "income"
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {transaction.category}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
                         {format(new Date(transaction.date), "PPP", { locale: es })}
-                      </p>
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                    <p
-                      className={`text-base sm:text-lg font-bold ${
-                        transaction.type === "income"
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-red-600 dark:text-red-400"
-                      }`}
-                    >
-                      {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setDeleteId(transaction.id)}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </Button>
-                  </div>
+                  {/* Botón de eliminar */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                    onClick={() => setDeleteId(transaction.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
                 </div>
               ))}
             </div>
@@ -157,16 +157,16 @@ export function TransactionsList() {
       </Card>
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent className="max-w-[90%] sm:max-w-md mx-auto">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar transacción</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. La transacción será eliminada permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
-            <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="w-full sm:w-auto" onClick={handleDelete}>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>

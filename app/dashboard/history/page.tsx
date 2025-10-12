@@ -329,42 +329,48 @@ export default function HistoryPage() {
                   .map((transaction) => (
                     <div
                       key={transaction.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                     >
-                      <div className="flex items-center gap-4 flex-1">
-                        <div
-                          className={`p-2 rounded-full ${
-                            transaction.type === "income"
-                              ? "bg-green-100 dark:bg-green-900/30"
-                              : "bg-red-100 dark:bg-red-900/30"
-                          }`}
-                        >
-                          {transaction.type === "income" ? (
-                            <ArrowUpCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                          ) : (
-                            <ArrowDownCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{transaction.description}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary" className="text-xs">
-                              {transaction.category}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(transaction.date), "PPP", { locale: es })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                      {/* Icono */}
                       <div
-                        className={`text-lg font-bold ${
+                        className={`p-2 rounded-full flex-shrink-0 ${
                           transaction.type === "income"
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-red-600 dark:text-red-400"
+                            ? "bg-green-100 dark:bg-green-900/30"
+                            : "bg-red-100 dark:bg-red-900/30"
                         }`}
                       >
-                        {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
+                        {transaction.type === "income" ? (
+                          <ArrowUpCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        ) : (
+                          <ArrowDownCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                        )}
+                      </div>
+
+                      {/* Contenido principal */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="font-medium text-sm sm:text-base truncate">
+                            {transaction.description}
+                          </h3>
+                          <div
+                            className={`text-base sm:text-lg font-bold whitespace-nowrap flex-shrink-0 ${
+                              transaction.type === "income"
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-red-600 dark:text-red-400"
+                            }`}
+                          >
+                            {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {transaction.category}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(transaction.date), "PPP", { locale: es })}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}
