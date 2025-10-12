@@ -91,13 +91,14 @@ export function useTheme() {
   return context
 }
 
+
 export function ThemeColorMeta() {
   const { theme, mode } = useTheme();
 
   useEffect(() => {
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      const color = themes[theme][mode].background; // 👈 depende de cómo definas tus temas
+      const color = themes[theme][mode].primary;
       meta.setAttribute("content", color);
     }
   }, [theme, mode]);
