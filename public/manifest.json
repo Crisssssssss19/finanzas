@@ -4,7 +4,7 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0070f3",
+  "theme_color": "#A62454",
   "description": "Aplicación PWA hecha con Next.js + TypeScript",
   "icons": [
   {

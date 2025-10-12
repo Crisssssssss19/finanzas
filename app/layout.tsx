@@ -36,11 +36,13 @@ export default function RootLayout({
         {/* 👇 Meta etiquetas extra recomendadas para PWA */}
         <meta name="application-name" content="C&A Grow" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        {/* ✅ Cambiado a black-translucent para mejor apariencia */}
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="C&A Grow" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#ffffff" />
+        {/* ✅ El color se actualiza dinámicamente desde ThemeColorMeta */}
+        <meta name="theme-color" content="#A62454" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/192x192.png" />
         <link rel="apple-touch-icon" href="/192x192.png" />
