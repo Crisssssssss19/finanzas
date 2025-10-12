@@ -96,10 +96,13 @@ export function ThemeColorMeta() {
 
   useEffect(() => {
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) {
-      const color = themes[theme][mode].background; // 👈 depende de cómo definas tus temas
-      meta.setAttribute("content", color);
-    }
+    if (!meta) return;
+
+    // Usa directamente el color de fondo del tema activo
+    const color = themes[theme]?.[mode]?.background || (mode === "dark" ? "#000000" : "#ffffff");
+
+    meta.setAttribute("content", color);
+    document.body.style.backgroundColor = color; // 🔥 Esto también cambia el fondo visualmente
   }, [theme, mode]);
 
   return null;
