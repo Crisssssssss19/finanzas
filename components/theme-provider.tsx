@@ -98,7 +98,7 @@ export function ThemeColorMeta() {
   useEffect(() => {
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      const color = themes[theme][mode].primary;
+      const color = themes[theme][mode].background;
       meta.setAttribute("content", color);
     }
   }, [theme, mode]);
